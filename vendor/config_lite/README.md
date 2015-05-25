@@ -1,0 +1,331 @@
+Config_Lite
+===========
+
+Description
+-----------
+
+a simple, lightweight and fast class for ini style configuration files, 
+with the native PHP function `parse_ini_file' under the hood.
+
+Config_Lite is inspired by Pythons ConfigParser.
+
+
+A "Config_Lite" file consists of global key/value pair (KVP) entries and optional sections, 
+"[section]", followed by "name = value" (KVP) entries.
+
+
+Installation
+------------
+
+*Pear*
+
+`pear install Config_Lite-beta`
+
+
+*Composer*
+
+__Create a composer.json file and run `composer install`__  
+```
+{
+    "repositories": [
+        {
+            "type": "pear",
+            "url": "pear.php.net"
+        }
+    ],
+    "require": {
+        "pear-pear/Config_Lite": "*"
+    }
+}
+
+```
+
+__Composers autoload example usage__
+```php
+<?php
+require __DIR__ . '/../vendor/autoload.php';
+
+$config = new Config_Lite;
+```
+
+
+
+
+Examples
+--------
+
+__A simple configuration file: `test.ini'__
+
+```
+
+public_key_file =  "~/.ssh/id_rsa.pub"
+debug = yes
+
+[general]
+lang = "en"
+
+[db]
+user = "dionysis"
+password = "c2oiVnY!f8sf"
+```
+
+
+__Read Configuration file:__
+```php
+<?php
+
+require_once 'Config/Lite.php';
+
+$config = new Config_Lite('test.ini');
+
+echo $config->get('db', 'user'); // dionysis
+echo $config->get(null, 'public_key_file'); // ~/.ssh/id_rsa.pub
+
+if (true === $config->getBool(null, 'debug', true)) {
+	echo $config;
+}
+
+// read with ArrayAccess
+echo $config['db']['password']; // c2oiVnY!f8sf
+```
+
+__Save Configuration file:__
+
+```php
+<?php
+
+require_once 'Config/Lite.php';
+
+// write with file locking
+$config = new Config_Lite('test.ini', LOCK_EX);
+
+$config->set('db', 'user', 'JohnDoe')
+	->set('db', 'password', 'd0g1tcVs$HgIn1');
+
+// set with ArrayAccess
+$config['public_key_file'] = '~/.ssh/id_rsa.pub';
+$config['general'] = array('lang' => 'de');
+
+// save object to file
+$config->save();
+```
+
+__Create configuration file:__
+
+```php
+<?php
+
+require_once 'Config/Lite.php';
+
+$config = new Config_Lite('test.ini');
+$config->set('db', 'user', 'JohnDoe')
+	->set('db', 'password', 'd0g1tcVs$HgIn1');
+
+// set global bool 'debug' 
+$config->set(null, 'debug', false);
+
+// save object to file
+try {
+	$config->save();
+} catch (Config_Lite_Exception $e) {
+    echo "\n", 'Exception Message: ', $e->getMessage();
+}
+```
+
+
+__Alternative file creation with write:__
+
+```php
+<?php
+
+require_once 'Config/Lite.php';
+
+$filename = 'test.ini';
+
+$config = new Config_Lite();
+
+try {
+	$config->write($filename, array(
+			'public_key_file' =>  "~/.ssh/id_rsa.pub",
+			'general' => array(
+				'lang' => 'fr'
+			),
+			'db' => array(
+				'user' => 'dionysis',
+				'password' => 'd0g1tcVs$HgIn1'
+			)
+		)
+	);
+} catch (Config_Lite_Exception $exception) {
+    printf("Failed to write file: %s.\n", $filename);
+    printf("Exception Message: %s\n", $exception->getMessage());
+    printf("Exception Stracktrace: %s\n", $exception->getTraceAsString());
+}
+```
+
+__Config without File - Streams, Filter or stdout:__
+
+```php
+<?php
+
+require_once 'Config/Lite.php';
+
+$config = new Config_Lite();
+
+$filename = sprintf(
+    "php://filter/write=string.rot13/resource=%s", "test.ini"
+);
+
+$config->write($filename, array(
+	    'public_key_file' =>  "~/.ssh/id_rsa.pub",
+	    'general' => array(
+	    'lang' => 'fr'
+	),
+	'db' => array(
+		'user' => 'dionysis',
+		'password' => 'd0g1tcVs$HgIn1'
+		)
+	)
+);
+
+// Writing to stdout
+$config->write("php://stdout", array(
+	    'public_key_file' =>  "~/.ssh/id_rsa.pub",
+	    'general' => array(
+	    'lang' => 'fr'
+	),
+	'db' => array(
+		'user' => 'dionysis',
+		'password' => 'd0g1tcVs$HgIn1'
+		)
+	)
+);
+
+```
+
+
+
+
+
+
+__global Configuration options (without sections) :__
+
+```php
+<?php
+
+$config->set(null, 'private_key_file', '~/.ssh/id_rsa');
+// set with arrayaccess
+$config['public_key_file'] = '~/.ssh/id_rsa.pub';
+
+$config->sync();
+
+echo $config->get(null, 'public_key_file');
+// get with arrayaccess
+echo $config['private_key_file'];
+```
+
+__iterate (SPL Iterator) :__
+```php
+<?php
+
+$config = new Config_Lite($filename);
+
+foreach ($config as $section => $name) {
+	if (is_array($name)) {
+		$s.= sprintf("[%s]\n", $section);
+		foreach ($name as $key => $val) {
+			$s.= sprintf("\t%s = %s\n", $key, $val);
+		}
+	} else {
+		$s.= sprintf("%s=%s\n", $section, $name);
+	}
+}
+```
+
+
+Options
+-------
+
+ __setProcessSections(bool)__
+
+Sets whether or not sections should be processed
+If true, values for each section will be placed into
+a sub-array for the section. If false, all values will
+be placed in the global scope.
+
+ __setQuoteStrings(bool)__
+
+Sets whether or not to doubleQuote
+If true, everything but bool and numeric 
+values get doublequoted.
+
+
+
+Notes & Limitations
+-------------------
+
+* Config_Lite is an OO frontend to `parse_ini_file' and writing ini files, 
+but you can also use the public method `write' if you only want to write an array as ini file 
+* Use getString and setString to save and read Strings with double _and_ single-quotes 
+* Use getBool if you need a real bool type, eg. for strict equality comparision 
+* The methods `set' and `get' keep values untouched, but the write method 
+normalize "bool" values to a human readable representation, 
+doublequotes strings and numeric values without any quotes 
+* newline chars defaults to "\n", editable with `setLinebreak' 
+* comments get dropped when writing after reading  
+* no support of comments and multiline strings, because reading with `parse_ini_file` does not support it 
+
+If you want to save userinput like images or a regex, i'd recommend to use `get` with base64_decode and `set` with base64_encode. 
+
+
+__Save regex (as global option) base64 encoded :__
+
+```php
+<?php
+
+require_once 'Config/Lite.php';
+
+$config = new Config_Lite('regex-test.ini');
+
+$regex = '/Hello \"(.*?)\"/';
+$config->set(null, 'regex', base64_encode($regex));
+// save object, here sync to read it back, just to test
+$config->sync();
+// in 'regex-test.ini': regex = "L0hlbGxvIFwiKC4qPylcIi8="
+$regex = base64_decode($config->get(null, 'regex'));
+if (preg_match($regex, 'Hello "World"!')) {
+    printf("matched. regex:%s", $regex);
+} else {
+    printf("no match found. regex:%s", $regex);
+}
+```
+
+IDEAS
+------
+
+* Config_Lite_Ini ( https://github.com/pce/Config_Lite_Ini ) with metainfos to supports global sections, 
+* support of comments and multiline strings (both supported by Pear::Config)  
+
+
+Credits
+-------
+
+- [mfonda](https://github.com/mfonda) ensured toString and output are eqaul, added accessors and options  
+- [CloCkWeRX](https://github.com/CloCkWeRX) improvements and Jenkins Integration  
+- [cweiske](https://github.com/cweiske) for various suggestions  
+  
+
+Contributing
+------------
+
+*Patches are Welcome!*
+
+Create an Issue with a Link to your forked branch.
+
+https://github.com/pce/config_lite
+
+or report bugs at: 
+http://pear.php.net/package/Config_Lite
+
+
+

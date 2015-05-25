@@ -1,0 +1,16 @@
+{
+	"name": "config_lite/config_lite",
+	"description": ".ini editor",
+	"type": "library",
+	"license": "MIT",
+	"authors": [
+		{
+		"name": " Patrick C. Engel",
+		"email": "pce@php.net"
+		}
+	],
+	"autoload": {
+		"psr-0": {"configlite": "Lite/"},
+		"files": ["Lite.php"]
+	}
+}

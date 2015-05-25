@@ -1,0 +1,111 @@
+An example of Config_Lite usage :
+---------------------------------
+
+>>> Basic one :
+
+A Configuration File: `test.cfg'
+
+----------
+[general]
+lang = en
+
+[db]
+user = dionysis
+password = c2oiVnY!f8sf
+
+----------
+
+
+Read Configuration file:
+----------
+<?php
+
+require_once 'Config/Lite.php';
+
+$config = new Config_Lite('test.cfg');
+
+echo $config->get('db', 'user');
+
+// read with ArrayAccess
+echo $config['db']['password'];
+
+echo $config;
+
+----------
+
+
+Save Configuration file:
+----------
+<?php
+
+require_once 'Config/Lite.php';
+
+$config = new Config_Lite();
+$config->read('test.cfg');
+$config->set('db', 'user', 'JohnDoe')
+	->set('db', 'password', 'd0g1tcVs$HgIn1');
+
+// set with ArrayAccess
+$config['general'] = array('lang' => 'fr');
+
+echo $config;
+
+$config->save();
+
+----------
+
+
+global Configuration options (without sections) :
+
+----------
+<?php
+
+$config->set(null, 'private_key_file', '~/.ssh/id_rsa');
+// set with arrayaccess
+$config['public_key_file'] = '~/.ssh/id_rsa.pub';
+
+$config->sync();
+
+echo $config->get(null, 'public_key_file');
+// get with arrayaccess
+echo $config['private_key_file'];
+
+----------
+
+Save regex (as global option) base64 encoded :
+----------
+<?php
+
+require_once 'Config/Lite.php';
+
+$config = new Config_Lite('regex-test.ini');
+
+$regex = '/Hello \"(.*?)\"/';
+$config->set(null, 'regex', base64_encode($regex));
+// save object, here sync to read it back, just to test
+$config->sync();
+// in 'regex-test.ini': regex = "L0hlbGxvIFwiKC4qPylcIi8="
+$regex = base64_decode($config->get(null, 'regex'));
+if (preg_match($regex, 'Hello "World"!')) {
+    printf("matched. regex:%s", $regex);
+} else {
+    printf("no match found. regex:%s", $regex);
+}
+----------
+
+
+.iterate (SPL Iterator) :
+----------
+$config = new Config_Lite($filename);
+
+foreach ($config as $section => $name) {
+	if (is_array($name)) {
+		$s.= sprintf("[%s]\n", $section);
+		foreach ($name as $key => $val) {
+			$s.= sprintf("\t%s = %s\n", $key, $val);
+		}
+	} else {
+		$s.= sprintf("%s=%s\n", $section, $name);
+	}
+}
+----------
