@@ -21,6 +21,9 @@ echo $session->id;
     <div class="jumbotron">
       <p>GCode Generator - Slic3r Online<br/><br/></p>
         <p><a class="btn btn-success" href="#">Slice Your STL File</a></p>
+        
+        <h4>upload function is not working yet.</h4>
+        
     </div>
 
     <div class="body-content">
