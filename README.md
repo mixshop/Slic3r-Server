@@ -1,8 +1,18 @@
 Slic3r Server
 ================================
+Goals
+----------------
 
-Powered by Yii 2
+1) people can do the sli3r configration setting online, it's easy for them to ask for suggestion if everyone can access the correct slic3r setting.
 
+2) people can do the sli3r online instead of local computer, this will simplify so many slic3r setting, and avoid some possible problem on the local computer.
+
+
+Join This Project
+-----------------
+I am looking for developer(s) to join me with this prject. please email me or fork this project if you like to help. Thanks,
+
+Web application is powered by Yii 2, you can check the demo at: http://mrguo.net/slicer/web/
 
 DIRECTORY STRUCTURE
 -------------------
